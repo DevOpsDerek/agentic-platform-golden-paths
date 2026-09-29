@@ -1,0 +1,41 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-secure-workloads
+  annotations:
+    policies.kyverno.io/title: Require secure workload defaults
+    policies.kyverno.io/description: Require non-root, restricted containers with bounded resources.
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: require-security-controls
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+      validate:
+        message: "Workloads must run non-root with RuntimeDefault seccomp, drop all capabilities, prohibit privilege escalation, use a read-only root filesystem, and set CPU/memory requests and limits."
+        pattern:
+          spec:
+            securityContext:
+              runAsNonRoot: true
+              seccompProfile:
+                type: RuntimeDefault
+        foreach:
+          - list: "request.object.spec.containers"
+            pattern:
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop:
+                    - ALL
+              resources:
+                requests:
+                  cpu: "?*"
+                  memory: "?*"
+                limits:
+                  cpu: "?*"
+                  memory: "?*"

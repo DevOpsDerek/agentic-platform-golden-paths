@@ -1,0 +1,20 @@
+apiVersion: cli.kyverno.io/v1alpha1
+kind: Test
+metadata:
+  name: require-secure-workloads
+policies:
+  - ../../policies/kyverno/require-secure-workloads.yaml
+resources:
+  - compliant-pod.yaml
+  - noncompliant-pod.yaml
+results:
+  - policy: require-secure-workloads
+    rule: require-security-controls
+    resource: compliant-service
+    kind: Pod
+    result: pass
+  - policy: require-secure-workloads
+    rule: require-security-controls
+    resource: deliberately-noncompliant
+    kind: Pod
+    result: fail

@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+chart="${root}/charts/secure-service"
+rendered="$(mktemp)"
+trap 'rm -f "$rendered"' EXIT
+
+helm lint "$chart"
+helm template secure-service "$chart" \
+  --namespace golden-path-demo \
+  --values "${root}/gitops/values/secure-service/developer.yaml" \
+  --values "${root}/gitops/values/secure-service/platform.yaml" > "$rendered"
+
+grep -q 'runAsNonRoot: true' "$rendered"
+grep -q 'type: RuntimeDefault' "$rendered"
+grep -q 'allowPrivilegeEscalation: false' "$rendered"
+grep -q 'readOnlyRootFilesystem: true' "$rendered"
+grep -q 'drop:' "$rendered"
+grep -q -- '- ALL' "$rendered"
+grep -q 'automountServiceAccountToken: false' "$rendered"
+grep -q 'cpu: 100m' "$rendered"
+grep -q 'memory: 128Mi' "$rendered"
+grep -q 'livenessProbe:' "$rendered"
+grep -q 'readinessProbe:' "$rendered"
+grep -q 'startupProbe:' "$rendered"
+grep -q 'prometheus.io/scrape: "true"' "$rendered"
+
+if command -v kyverno >/dev/null 2>&1; then
+  kyverno test "${root}/tests/kyverno"
+else
+  echo "Kyverno CLI not installed; run 'kyverno test ${root}/tests/kyverno' to execute offline policy assertions."
+fi
