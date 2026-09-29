@@ -7,9 +7,22 @@ policies:
 resources:
   - compliant-pod.yaml
   - noncompliant-pod.yaml
+  - container-overrides-pod.yaml
+  - init-container-bypass-pod.yaml
+  - ephemeral-container-bypass-pod.yaml
 results:
   - policy: require-secure-workloads
     rule: require-security-controls
+    resource: compliant-service
+    kind: Pod
+    result: pass
+  - policy: require-secure-workloads
+    rule: disallow-added-capabilities
+    resource: compliant-service
+    kind: Pod
+    result: pass
+  - policy: require-secure-workloads
+    rule: require-bounded-resources
     resource: compliant-service
     kind: Pod
     result: pass
@@ -18,3 +31,58 @@ results:
     resource: deliberately-noncompliant
     kind: Pod
     result: fail
+  - policy: require-secure-workloads
+    rule: disallow-added-capabilities
+    resource: deliberately-noncompliant
+    kind: Pod
+    result: pass
+  - policy: require-secure-workloads
+    rule: require-bounded-resources
+    resource: deliberately-noncompliant
+    kind: Pod
+    result: fail
+  - policy: require-secure-workloads
+    rule: require-security-controls
+    resource: container-security-overrides
+    kind: Pod
+    result: fail
+  - policy: require-secure-workloads
+    rule: disallow-added-capabilities
+    resource: container-security-overrides
+    kind: Pod
+    result: fail
+  - policy: require-secure-workloads
+    rule: require-bounded-resources
+    resource: container-security-overrides
+    kind: Pod
+    result: fail
+  - policy: require-secure-workloads
+    rule: require-security-controls
+    resource: init-container-bypass
+    kind: Pod
+    result: fail
+  - policy: require-secure-workloads
+    rule: disallow-added-capabilities
+    resource: init-container-bypass
+    kind: Pod
+    result: pass
+  - policy: require-secure-workloads
+    rule: require-bounded-resources
+    resource: init-container-bypass
+    kind: Pod
+    result: fail
+  - policy: require-secure-workloads
+    rule: require-security-controls
+    resource: ephemeral-container-bypass
+    kind: Pod
+    result: fail
+  - policy: require-secure-workloads
+    rule: disallow-added-capabilities
+    resource: ephemeral-container-bypass
+    kind: Pod
+    result: pass
+  - policy: require-secure-workloads
+    rule: require-bounded-resources
+    resource: ephemeral-container-bypass
+    kind: Pod
+    result: pass

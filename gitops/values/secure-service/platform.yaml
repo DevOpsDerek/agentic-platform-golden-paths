@@ -1,8 +1,15 @@
 # Platform-owned settings. Keep this file after developer.yaml in Argo CD.
-image:
-  pullPolicy: Always
-
 platform:
+  imagePullPolicy: Always
+  serviceType: ClusterIP
+  serviceAccount:
+    create: true
+    name: ""
+  prometheus:
+    enabled: true
+    path: /metrics
+    port: 9898
+  podAnnotations: {}
   resources:
     requests:
       cpu: 100m
@@ -18,8 +25,26 @@ platform:
     seccompProfile:
       type: RuntimeDefault
   containerSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 10001
+    runAsGroup: 10001
+    seccompProfile:
+      type: RuntimeDefault
     allowPrivilegeEscalation: false
     readOnlyRootFilesystem: true
     capabilities:
+      add: []
       drop:
         - ALL
+  livenessProbe:
+    path: /healthz
+    initialDelaySeconds: 5
+    periodSeconds: 10
+  readinessProbe:
+    path: /readyz
+    initialDelaySeconds: 3
+    periodSeconds: 5
+  startupProbe:
+    path: /healthz
+    periodSeconds: 5
+    failureThreshold: 12

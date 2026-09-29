@@ -16,7 +16,7 @@ spec:
               kinds:
                 - Pod
       validate:
-        message: "Workloads must run non-root with RuntimeDefault seccomp, drop all capabilities, prohibit privilege escalation, use a read-only root filesystem, and set CPU/memory requests and limits."
+        message: "Pods and all container types must run non-root with RuntimeDefault seccomp, drop all capabilities, prohibit privilege escalation, use a read-only root filesystem, and regular/init containers must set bounded CPU/memory requests and limits."
         pattern:
           spec:
             securityContext:
@@ -27,15 +27,152 @@ spec:
           - list: "request.object.spec.containers"
             pattern:
               securityContext:
+                runAsNonRoot: true
+                seccompProfile:
+                  type: RuntimeDefault
                 allowPrivilegeEscalation: false
                 readOnlyRootFilesystem: true
                 capabilities:
                   drop:
                     - ALL
-              resources:
-                requests:
-                  cpu: "?*"
-                  memory: "?*"
-                limits:
-                  cpu: "?*"
-                  memory: "?*"
+          - list: "request.object.spec.initContainers || `[]`"
+            pattern:
+              securityContext:
+                runAsNonRoot: true
+                seccompProfile:
+                  type: RuntimeDefault
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop:
+                    - ALL
+          - list: "request.object.spec.ephemeralContainers || `[]`"
+            pattern:
+              securityContext:
+                runAsNonRoot: true
+                seccompProfile:
+                  type: RuntimeDefault
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop:
+                    - ALL
+    - name: disallow-added-capabilities
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+      validate:
+        message: "Containers must not add Linux capabilities."
+        foreach:
+          - list: "request.object.spec.containers"
+            deny:
+              conditions:
+                any:
+                  - key: "{{ element.securityContext.capabilities.add || `[]` }}"
+                    operator: AnyNotIn
+                    value: []
+          - list: "request.object.spec.initContainers || `[]`"
+            deny:
+              conditions:
+                any:
+                  - key: "{{ element.securityContext.capabilities.add || `[]` }}"
+                    operator: AnyNotIn
+                    value: []
+          - list: "request.object.spec.ephemeralContainers || `[]`"
+            deny:
+              conditions:
+                any:
+                  - key: "{{ element.securityContext.capabilities.add || `[]` }}"
+                    operator: AnyNotIn
+                    value: []
+    - name: require-bounded-resources
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+      validate:
+        message: "Regular and init containers must have positive CPU and memory requests and limits; requests must not exceed limits, and limits must not exceed 500m CPU or 256Mi memory."
+        foreach:
+          - list: "request.object.spec.containers"
+            deny:
+              conditions:
+                any:
+                  - key: "{{ element.resources.requests.cpu || '' }}"
+                    operator: Equals
+                    value: ""
+                  - key: "{{ element.resources.requests.memory || '' }}"
+                    operator: Equals
+                    value: ""
+                  - key: "{{ element.resources.limits.cpu || '' }}"
+                    operator: Equals
+                    value: ""
+                  - key: "{{ element.resources.limits.memory || '' }}"
+                    operator: Equals
+                    value: ""
+                  - key: "{{ element.resources.requests.cpu || '0' }}"
+                    operator: LessThanOrEquals
+                    value: "0"
+                  - key: "{{ element.resources.requests.memory || '0' }}"
+                    operator: LessThanOrEquals
+                    value: "0"
+                  - key: "{{ element.resources.limits.cpu || '0' }}"
+                    operator: LessThanOrEquals
+                    value: "0"
+                  - key: "{{ element.resources.limits.memory || '0' }}"
+                    operator: LessThanOrEquals
+                    value: "0"
+                  - key: "{{ element.resources.requests.cpu || '0' }}"
+                    operator: GreaterThan
+                    value: "{{ element.resources.limits.cpu || '0' }}"
+                  - key: "{{ element.resources.requests.memory || '0' }}"
+                    operator: GreaterThan
+                    value: "{{ element.resources.limits.memory || '0' }}"
+                  - key: "{{ element.resources.limits.cpu || '0' }}"
+                    operator: GreaterThan
+                    value: 500m
+                  - key: "{{ element.resources.limits.memory || '0' }}"
+                    operator: GreaterThan
+                    value: 256Mi
+          - list: "request.object.spec.initContainers || `[]`"
+            deny:
+              conditions:
+                any:
+                  - key: "{{ element.resources.requests.cpu || '' }}"
+                    operator: Equals
+                    value: ""
+                  - key: "{{ element.resources.requests.memory || '' }}"
+                    operator: Equals
+                    value: ""
+                  - key: "{{ element.resources.limits.cpu || '' }}"
+                    operator: Equals
+                    value: ""
+                  - key: "{{ element.resources.limits.memory || '' }}"
+                    operator: Equals
+                    value: ""
+                  - key: "{{ element.resources.requests.cpu || '0' }}"
+                    operator: LessThanOrEquals
+                    value: "0"
+                  - key: "{{ element.resources.requests.memory || '0' }}"
+                    operator: LessThanOrEquals
+                    value: "0"
+                  - key: "{{ element.resources.limits.cpu || '0' }}"
+                    operator: LessThanOrEquals
+                    value: "0"
+                  - key: "{{ element.resources.limits.memory || '0' }}"
+                    operator: LessThanOrEquals
+                    value: "0"
+                  - key: "{{ element.resources.requests.cpu || '0' }}"
+                    operator: GreaterThan
+                    value: "{{ element.resources.limits.cpu || '0' }}"
+                  - key: "{{ element.resources.requests.memory || '0' }}"
+                    operator: GreaterThan
+                    value: "{{ element.resources.limits.memory || '0' }}"
+                  - key: "{{ element.resources.limits.cpu || '0' }}"
+                    operator: GreaterThan
+                    value: 500m
+                  - key: "{{ element.resources.limits.memory || '0' }}"
+                    operator: GreaterThan
+                    value: 256Mi

@@ -4,7 +4,7 @@ metadata:
   name: secure-service
   namespace: argocd
 spec:
-  project: default
+  project: secure-service
   sources:
     - repoURL: https://github.com/DevOpsDerek/agentic-platform-golden-paths.git
       targetRevision: main
@@ -23,5 +23,3 @@ spec:
     automated:
       prune: true
       selfHeal: true
-    syncOptions:
-      - CreateNamespace=true

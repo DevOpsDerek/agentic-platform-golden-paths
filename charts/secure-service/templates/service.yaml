@@ -5,10 +5,10 @@ metadata:
   labels:
     {{- include "secure-service.labels" . | nindent 4 }}
 spec:
-  type: {{ .Values.service.type }}
+  type: {{ .Values.platform.serviceType }}
   ports:
     - name: http
-      port: {{ .Values.service.port }}
+      port: {{ .Values.developer.servicePort }}
       targetPort: http
       protocol: TCP
   selector:

@@ -5,7 +5,7 @@ metadata:
   labels:
     {{- include "secure-service.labels" . | nindent 4 }}
 spec:
-  replicas: {{ .Values.replicaCount }}
+  replicas: {{ .Values.developer.replicaCount }}
   selector:
     matchLabels:
       {{- include "secure-service.selectorLabels" . | nindent 6 }}
@@ -13,33 +13,33 @@ spec:
     metadata:
       labels:
         {{- include "secure-service.selectorLabels" . | nindent 8 }}
-      {{- if or .Values.podAnnotations .Values.telemetry.prometheus.enabled }}
+      {{- if or .Values.platform.podAnnotations .Values.platform.prometheus.enabled }}
       annotations:
-        {{- with .Values.podAnnotations }}
+        {{- with .Values.platform.podAnnotations }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
-        {{- if .Values.telemetry.prometheus.enabled }}
+        {{- if .Values.platform.prometheus.enabled }}
         prometheus.io/scrape: "true"
-        prometheus.io/path: {{ .Values.telemetry.prometheus.path | quote }}
-        prometheus.io/port: {{ .Values.telemetry.prometheus.port | quote }}
+        prometheus.io/path: {{ .Values.platform.prometheus.path | quote }}
+        prometheus.io/port: {{ .Values.platform.prometheus.port | quote }}
         {{- end }}
       {{- end }}
     spec:
-      serviceAccountName: {{ default (include "secure-service.fullname" .) .Values.serviceAccount.name }}
+      serviceAccountName: {{ default (include "secure-service.fullname" .) .Values.platform.serviceAccount.name }}
       automountServiceAccountToken: false
       securityContext:
         {{- toYaml .Values.platform.podSecurityContext | nindent 8 }}
       containers:
         - name: {{ include "secure-service.name" . }}
-          {{- if .Values.image.digest }}
-          image: "{{ .Values.image.repository }}@{{ .Values.image.digest }}"
+          {{- if .Values.developer.image.digest }}
+          image: "{{ .Values.developer.image.repository }}@{{ .Values.developer.image.digest }}"
           {{- else }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          image: "{{ .Values.developer.image.repository }}:{{ .Values.developer.image.tag }}"
           {{- end }}
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          imagePullPolicy: {{ .Values.platform.imagePullPolicy }}
           ports:
             - name: http
-              containerPort: {{ .Values.service.port }}
+              containerPort: {{ .Values.developer.servicePort }}
               protocol: TCP
           securityContext:
             {{- toYaml .Values.platform.containerSecurityContext | nindent 12 }}
@@ -47,19 +47,19 @@ spec:
             {{- toYaml .Values.platform.resources | nindent 12 }}
           livenessProbe:
             httpGet:
-              path: {{ .Values.livenessProbe.path }}
+              path: {{ .Values.platform.livenessProbe.path }}
               port: http
-            initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
-            periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
+            initialDelaySeconds: {{ .Values.platform.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.platform.livenessProbe.periodSeconds }}
           readinessProbe:
             httpGet:
-              path: {{ .Values.readinessProbe.path }}
+              path: {{ .Values.platform.readinessProbe.path }}
               port: http
-            initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
-            periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
+            initialDelaySeconds: {{ .Values.platform.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.platform.readinessProbe.periodSeconds }}
           startupProbe:
             httpGet:
-              path: {{ .Values.startupProbe.path }}
+              path: {{ .Values.platform.startupProbe.path }}
               port: http
-            periodSeconds: {{ .Values.startupProbe.periodSeconds }}
-            failureThreshold: {{ .Values.startupProbe.failureThreshold }}
+            periodSeconds: {{ .Values.platform.startupProbe.periodSeconds }}
+            failureThreshold: {{ .Values.platform.startupProbe.failureThreshold }}

@@ -1,0 +1,170 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["developer", "platform"],
+  "properties": {
+    "developer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["replicaCount", "image", "servicePort"],
+      "properties": {
+        "replicaCount": { "type": "integer", "minimum": 1, "maximum": 10 },
+        "image": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["repository", "tag", "digest"],
+          "properties": {
+            "repository": { "type": "string", "minLength": 1 },
+            "tag": { "type": "string", "minLength": 1 },
+            "digest": { "type": "string", "pattern": "^$|^sha256:[a-f0-9]{64}$" }
+          }
+        },
+        "servicePort": { "type": "integer", "minimum": 1, "maximum": 65535 }
+      }
+    },
+    "platform": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "imagePullPolicy",
+        "serviceType",
+        "serviceAccount",
+        "prometheus",
+        "podAnnotations",
+        "resources",
+        "podSecurityContext",
+        "containerSecurityContext",
+        "livenessProbe",
+        "readinessProbe",
+        "startupProbe"
+      ],
+      "properties": {
+        "imagePullPolicy": { "type": "string", "enum": ["Always", "IfNotPresent", "Never"] },
+        "serviceType": { "type": "string", "enum": ["ClusterIP"] },
+        "serviceAccount": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["create", "name"],
+          "properties": {
+            "create": { "type": "boolean" },
+            "name": { "type": "string" }
+          }
+        },
+        "prometheus": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["enabled", "path", "port"],
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "path": { "type": "string" },
+            "port": { "type": "integer", "minimum": 1, "maximum": 65535 }
+          }
+        },
+        "podAnnotations": { "type": "object", "maxProperties": 0 },
+        "resources": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["requests", "limits"],
+          "properties": {
+            "requests": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["cpu", "memory"],
+              "properties": {
+                "cpu": { "type": "string" },
+                "memory": { "type": "string" }
+              }
+            },
+            "limits": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["cpu", "memory"],
+              "properties": {
+                "cpu": { "type": "string" },
+                "memory": { "type": "string" }
+              }
+            }
+          }
+        },
+        "podSecurityContext": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["runAsNonRoot", "runAsUser", "runAsGroup", "fsGroup", "seccompProfile"],
+          "properties": {
+            "runAsNonRoot": { "type": "boolean", "enum": [true] },
+            "runAsUser": { "type": "integer", "minimum": 1 },
+            "runAsGroup": { "type": "integer", "minimum": 1 },
+            "fsGroup": { "type": "integer", "minimum": 1 },
+            "seccompProfile": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["type"],
+              "properties": { "type": { "type": "string", "enum": ["RuntimeDefault"] } }
+            }
+          }
+        },
+        "containerSecurityContext": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "runAsNonRoot",
+            "runAsUser",
+            "runAsGroup",
+            "seccompProfile",
+            "allowPrivilegeEscalation",
+            "readOnlyRootFilesystem",
+            "capabilities"
+          ],
+          "properties": {
+            "runAsNonRoot": { "type": "boolean", "enum": [true] },
+            "runAsUser": { "type": "integer", "minimum": 1 },
+            "runAsGroup": { "type": "integer", "minimum": 1 },
+            "seccompProfile": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["type"],
+              "properties": { "type": { "type": "string", "enum": ["RuntimeDefault"] } }
+            },
+            "allowPrivilegeEscalation": { "type": "boolean", "enum": [false] },
+            "readOnlyRootFilesystem": { "type": "boolean", "enum": [true] },
+            "capabilities": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["add", "drop"],
+              "properties": {
+                "add": { "type": "array", "maxItems": 0 },
+                "drop": { "type": "array", "items": { "type": "string", "enum": ["ALL"] }, "minItems": 1, "maxItems": 1 }
+              }
+            }
+          }
+        },
+        "livenessProbe": { "$ref": "#/definitions/probe" },
+        "readinessProbe": { "$ref": "#/definitions/probe" },
+        "startupProbe": { "$ref": "#/definitions/startupProbe" }
+      }
+    }
+  },
+  "definitions": {
+    "probe": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "initialDelaySeconds", "periodSeconds"],
+      "properties": {
+        "path": { "type": "string" },
+        "initialDelaySeconds": { "type": "integer", "minimum": 0 },
+        "periodSeconds": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "startupProbe": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "periodSeconds", "failureThreshold"],
+      "properties": {
+        "path": { "type": "string" },
+        "periodSeconds": { "type": "integer", "minimum": 1 },
+        "failureThreshold": { "type": "integer", "minimum": 1 }
+      }
+    }
+  }
+}
