@@ -23,4 +23,3 @@ platform:
     capabilities:
       drop:
         - ALL
-
