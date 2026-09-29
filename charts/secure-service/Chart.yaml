@@ -1,0 +1,6 @@
+apiVersion: v2
+name: secure-service
+description: A secure-by-default Helm golden path for a synthetic service
+type: application
+version: 0.1.0
+appVersion: "6.7.1"

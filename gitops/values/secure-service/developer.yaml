@@ -1,0 +1,8 @@
+# Developer-owned inputs; values.schema.json rejects fields outside this interface.
+developer:
+  replicaCount: 2
+  image:
+    repository: ghcr.io/stefanprodan/podinfo
+    tag: "6.7.1"
+    digest: ""
+  servicePort: 9898

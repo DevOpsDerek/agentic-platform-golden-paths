@@ -1,0 +1,4 @@
+/charts/secure-service/ @DevOpsDerek
+/gitops/argocd/ @DevOpsDerek
+/gitops/values/secure-service/platform.yaml @DevOpsDerek
+/policies/kyverno/ @DevOpsDerek

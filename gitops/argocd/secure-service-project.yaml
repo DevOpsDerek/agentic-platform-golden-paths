@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: secure-service
+  namespace: argocd
+spec:
+  description: Restricted project for the secure-service demo application
+  sourceRepos:
+    - https://github.com/DevOpsDerek/agentic-platform-golden-paths.git
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: golden-path-demo
+  clusterResourceWhitelist: []
+  namespaceResourceWhitelist:
+    - group: apps
+      kind: Deployment
+    - group: ""
+      kind: Service
+    - group: ""
+      kind: ServiceAccount
