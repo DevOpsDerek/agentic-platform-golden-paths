@@ -28,3 +28,39 @@ spec:
         limits:
           cpu: 500m
           memory: 256Mi
+    - name: excessive-resource-limits
+      image: ghcr.io/stefanprodan/podinfo:6.7.1
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop:
+            - ALL
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+        limits:
+          cpu: 600m
+          memory: 300Mi
+    - name: zero-resource-requests
+      image: ghcr.io/stefanprodan/podinfo:6.7.1
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop:
+            - ALL
+      resources:
+        requests:
+          cpu: "0"
+          memory: "0"
+        limits:
+          cpu: 500m
+          memory: 256Mi
