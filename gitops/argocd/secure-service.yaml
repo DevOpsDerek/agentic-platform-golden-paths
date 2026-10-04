@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: secure-service
+  namespace: argocd
+spec:
+  project: secure-service
+  sources:
+    - repoURL: https://github.com/DevOpsDerek/agentic-platform-golden-paths.git
+      targetRevision: main
+      path: charts/secure-service
+      helm:
+        valueFiles:
+          - $values/gitops/values/secure-service/developer.yaml
+          - $values/gitops/values/secure-service/platform.yaml
+    - repoURL: https://github.com/DevOpsDerek/agentic-platform-golden-paths.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: golden-path-demo
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

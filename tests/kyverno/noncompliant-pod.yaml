@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: deliberately-noncompliant
+spec:
+  containers:
+    - name: service
+      image: busybox:latest
+      command: ["sh", "-c", "sleep 3600"]
