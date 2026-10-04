@@ -27,6 +27,7 @@ spec:
           - list: "request.object.spec.containers"
             pattern:
               securityContext:
+                =(privileged): false
                 runAsNonRoot: true
                 seccompProfile:
                   type: RuntimeDefault
