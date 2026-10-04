@@ -77,8 +77,8 @@ that fixture as a deployment manifest.
 ## Central automation adoption
 
 `.github/workflows/validate-automation.yml` calls the published
-[`DevOpsDerek/workflows` automation validator](https://github.com/DevOpsDerek/workflows/blob/57da3f99768c3403cb688b1729d3dfc146c7cd4b/docs/catalog.md)
-at immutable commit `57da3f99768c3403cb688b1729d3dfc146c7cd4b`. It runs on pull
+[`DevOpsDerek/workflows` automation validator](https://github.com/DevOpsDerek/workflows/blob/dac4b81c298cb3ea6821ea312efa5375f42d5ccb/docs/catalog.md)
+at immutable commit `dac4b81c298cb3ea6821ea312efa5375f42d5ccb`. It runs on pull
 requests, pushes to `main`, or manual dispatch with only `contents: read` and
 no inherited secrets. The central implementation lints Actions workflows and
 uses gh-aw `v0.89.21` to validate source/compiled-lock consistency when gh-aw

@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   validate:
-    uses: DevOpsDerek/workflows/.github/workflows/validate-agentic-workflows.yml@57da3f99768c3403cb688b1729d3dfc146c7cd4b
+    uses: DevOpsDerek/workflows/.github/workflows/validate-agentic-workflows.yml@dac4b81c298cb3ea6821ea312efa5375f42d5ccb
     with:
       gh-aw-version: v0.89.21
       workflows-directory: .github/workflows
