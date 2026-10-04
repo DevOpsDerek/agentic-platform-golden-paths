@@ -2,3 +2,5 @@
 /gitops/argocd/ @DevOpsDerek
 /gitops/values/secure-service/platform.yaml @DevOpsDerek
 /policies/kyverno/ @DevOpsDerek
+/.github/workflows/ @DevOpsDerek
+/.github/CODEOWNERS @DevOpsDerek
