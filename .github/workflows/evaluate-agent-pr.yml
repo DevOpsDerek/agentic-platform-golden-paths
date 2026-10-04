@@ -1,0 +1,57 @@
+name: Evaluate agent PR feedback
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Check out trusted evaluation source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.event.pull_request.base.sha || github.sha }}
+          path: trusted
+          persist-credentials: false
+      - name: Require trusted evaluation source
+        run: |
+          for file in \
+            tests/agent_feedback/cases.json \
+            tests/agent_feedback/evaluate.py \
+            tests/agent_feedback/test_evaluate.py; do
+            if [ ! -f "trusted/$file" ]; then
+              echo "::error::Trusted evaluation source is absent from the protected base revision: $file"
+              exit 1
+            fi
+          done
+      - name: Capture proposed PR file paths
+        if: github.event_name == 'pull_request'
+        env:
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: git diff --name-only "$PR_BASE_SHA...$PR_HEAD_SHA" > "$RUNNER_TEMP/pr-files.txt"
+      - name: Run evaluator tests
+        run: python3 -m unittest discover -s trusted/tests/agent_feedback -p 'test_*.py' -v
+      - name: Evaluate synthetic cases and PR file scope
+        if: github.event_name == 'pull_request'
+        run: >-
+          python3 trusted/tests/agent_feedback/evaluate.py
+          --cases trusted/tests/agent_feedback/cases.json
+          --changed-files-file "$RUNNER_TEMP/pr-files.txt"
+          --summary "$GITHUB_STEP_SUMMARY"
+      - name: Evaluate synthetic cases on main
+        if: github.event_name == 'push'
+        run: >-
+          python3 trusted/tests/agent_feedback/evaluate.py
+          --cases trusted/tests/agent_feedback/cases.json
+          --summary "$GITHUB_STEP_SUMMARY"
