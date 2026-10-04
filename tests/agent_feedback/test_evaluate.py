@@ -3,7 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from evaluate import evaluate_case, load_cases, load_changed_files
+from evaluate import _scope_allowed, evaluate_case, load_cases, load_changed_files
 
 
 CASES_FILE = Path(__file__).with_name("cases.json")
@@ -91,6 +91,17 @@ class EvaluateAgentFeedbackTests(unittest.TestCase):
         checks = {check["name"]: check["passed"] for check in result["checks"]}
         self.assertFalse(checks["bounded_scope"])
         self.assertEqual("blocked", result["status"])
+
+    def test_feedback_harness_and_workflow_are_excluded_from_agent_scope(self):
+        protected_files = [
+            ".github/workflows/evaluate-agent-pr.yml",
+            "tests/agent_feedback/evaluate.py",
+            "tests/agent_feedback/cases.json",
+            "tests/agent_feedback/test_evaluate.py",
+        ]
+        for protected_file in protected_files:
+            with self.subTest(path=protected_file):
+                self.assertFalse(_scope_allowed([protected_file]))
 
     def test_empty_or_unidentified_dataset_is_rejected(self):
         with tempfile.TemporaryDirectory() as temp_dir:

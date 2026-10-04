@@ -22,6 +22,10 @@ ALLOWED_PATHS = (
     "Makefile",
     "README.md",
 )
+PROTECTED_PATHS = (
+    ".github/workflows/evaluate-agent-pr.yml",
+    "tests/agent_feedback/",
+)
 
 
 def _non_empty_string(value: Any) -> bool:
@@ -91,6 +95,8 @@ def _scope_allowed(changed_files: list[Any]) -> bool:
         _non_empty_string(path)
         and not path.startswith("/")
         and ".." not in Path(path).parts
+        and path != PROTECTED_PATHS[0]
+        and not path.startswith(PROTECTED_PATHS[1])
         and any(fnmatchcase(path, pattern) for pattern in ALLOWED_PATHS)
         for path in changed_files
     )

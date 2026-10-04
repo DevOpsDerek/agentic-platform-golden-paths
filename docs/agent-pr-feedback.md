@@ -96,3 +96,15 @@ revision. The workflow therefore fails closed instead of executing the PR's
 evaluator or cases. This bootstrap PR's local synthetic run is not trusted CI
 evidence; after the harness is present on the base branch, subsequent PR runs
 execute the protected-base version and evaluate the proposed changed paths.
+
+## Remaining trust blocker
+
+GitHub loads a `pull_request` workflow definition from the PR merge ref. A PR
+that changes this workflow can therefore replace or skip the guardrail steps,
+even though the configured steps use evaluator code and cases from the base
+revision. The workflow path is listed in the existing CODEOWNERS file, but no
+required status checks are configured, and this task does not change
+protections. No approved immutable reusable workflow or other protected
+workflow source is available in this repository. Accordingly, this evaluation
+report remains advisory/non-required; workflow-source integrity cannot be
+guaranteed here without a separately approved protected-workflow mechanism.
