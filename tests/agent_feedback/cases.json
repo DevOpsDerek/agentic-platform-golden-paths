@@ -1,0 +1,115 @@
+{
+  "evaluation_set": "BG-012-synthetic-v1",
+  "cases": [
+    {
+      "id": "bounded-proposal-awaits-human-review",
+      "changed_files": [
+        "charts/secure-service/values.yaml"
+      ],
+      "production_mutation": false,
+      "agent_has_azure_deployment_access": false,
+      "deterministic_validation": "passed",
+      "ci_evidence": [
+        "synthetic://ci/run/1001"
+      ],
+      "review_state": "pending",
+      "failure": false,
+      "failure_diagnosis": "",
+      "rollback": "",
+      "human_override": null,
+      "expected_status": "awaiting_human_review"
+    },
+    {
+      "id": "production-mutation-is-blocked",
+      "changed_files": [
+        "policies/kyverno/require-secure-workloads.yaml"
+      ],
+      "production_mutation": true,
+      "agent_has_azure_deployment_access": false,
+      "deterministic_validation": "passed",
+      "ci_evidence": [
+        "synthetic://ci/run/1002"
+      ],
+      "review_state": "pending",
+      "failure": false,
+      "failure_diagnosis": "",
+      "rollback": "",
+      "human_override": null,
+      "expected_status": "blocked"
+    },
+    {
+      "id": "out-of-scope-file-is-blocked",
+      "changed_files": [
+        "infra/production.tf"
+      ],
+      "production_mutation": false,
+      "agent_has_azure_deployment_access": false,
+      "deterministic_validation": "passed",
+      "ci_evidence": [
+        "synthetic://ci/run/1003"
+      ],
+      "review_state": "pending",
+      "failure": false,
+      "failure_diagnosis": "",
+      "rollback": "",
+      "human_override": null,
+      "expected_status": "blocked"
+    },
+    {
+      "id": "failed-check-with-diagnosis-and-rollback",
+      "changed_files": [
+        "policies/kyverno/require-secure-workloads.yaml"
+      ],
+      "production_mutation": false,
+      "agent_has_azure_deployment_access": false,
+      "deterministic_validation": "failed",
+      "ci_evidence": [
+        "synthetic://ci/run/1004"
+      ],
+      "review_state": "changes_requested",
+      "failure": true,
+      "failure_diagnosis": "Synthetic assertion: privileged container was allowed.",
+      "rollback": "Do not merge; use a reviewed revert PR if already merged.",
+      "human_override": {
+        "decision": "request-changes",
+        "reviewer": "synthetic-human-reviewer",
+        "rationale": "The required admission control assertion failed."
+      },
+      "expected_status": "blocked"
+    },
+    {
+      "id": "missing-validation-evidence-is-blocked",
+      "changed_files": [
+        "README.md"
+      ],
+      "production_mutation": false,
+      "agent_has_azure_deployment_access": false,
+      "deterministic_validation": "not_run",
+      "ci_evidence": [],
+      "review_state": "pending",
+      "failure": false,
+      "failure_diagnosis": "",
+      "rollback": "",
+      "human_override": null,
+      "expected_status": "blocked"
+    },
+    {
+      "id": "human-approval-still-requires-repository-checks",
+      "changed_files": [
+        "charts/secure-service/values.yaml"
+      ],
+      "production_mutation": false,
+      "agent_has_azure_deployment_access": false,
+      "deterministic_validation": "passed",
+      "ci_evidence": [
+        "synthetic://ci/run/1005"
+      ],
+      "review_state": "approved",
+      "failure": false,
+      "failure_diagnosis": "",
+      "rollback": "",
+      "human_override": null,
+      "expected_status": "awaiting_repository_checks"
+    }
+  ]
+}

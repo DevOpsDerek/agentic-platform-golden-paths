@@ -1,0 +1,22 @@
+name: Evaluate agent PR feedback
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Run evaluator tests
+        run: python3 -m unittest discover -s tests/agent_feedback -p 'test_*.py' -v
+      - name: Evaluate synthetic feedback cases
+        run: python3 tests/agent_feedback/evaluate.py --summary "$GITHUB_STEP_SUMMARY"

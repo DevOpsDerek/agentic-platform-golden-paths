@@ -115,6 +115,28 @@ verified SHA-pinned central component, `inlined-imports: true`, and reviewed
 source plus generated lock files, with read-only agent permissions and bounded
 safe outputs.
 
+## Evaluated agent PR feedback loop
+
+`docs/agent-pr-feedback.md` documents the bounded PR-only workflow, evidence
+record, human override process, and failure diagnosis/rollback path. The
+synthetic evaluation set in `tests/agent_feedback/cases.json` exercises scope,
+production-mutation and Azure-access guardrails, deterministic validation,
+evaluation/CI evidence, human review, and failure recovery. Run it locally with:
+
+```sh
+python3 -m unittest discover -s tests/agent_feedback -p 'test_*.py' -v
+python3 tests/agent_feedback/evaluate.py
+```
+
+`.github/workflows/evaluate-agent-pr.yml` runs that suite on pull requests and
+pushes to `main` with `contents: read`, no secrets, and no Azure deployment
+steps. Its job summary is evidence for that workflow run; the synthetic cases
+do not evaluate a live Copilot model or prove repository protection settings.
+The evaluation reports readiness for human review, never authorizes a merge.
+Repository owners must keep merges subject to the existing repository rules and
+human approvals, and separately approve any Azure deployment. This change does
+not modify branch protection or grant agents deployment access.
+
 Workflow and CODEOWNERS changes request platform-owner review. Require human
 CODEOWNERS approval through branch protection before merging generated-artifact
 changes; CODEOWNERS alone does not enforce approval. This is particularly
