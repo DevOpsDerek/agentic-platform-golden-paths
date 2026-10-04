@@ -9,20 +9,28 @@ spec:
   validationFailureAction: Enforce
   background: true
   rules:
-    - name: require-security-controls
+    - name: require-pod-security-context
       match:
         any:
           - resources:
               kinds:
                 - Pod
       validate:
-        message: "Pods and all container types must run non-root with RuntimeDefault seccomp, drop all capabilities, prohibit privilege escalation, use a read-only root filesystem, and regular/init containers must set bounded CPU/memory requests and limits."
+        message: "Pods must run non-root with RuntimeDefault seccomp."
         pattern:
           spec:
             securityContext:
               runAsNonRoot: true
               seccompProfile:
                 type: RuntimeDefault
+    - name: require-container-security-controls
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+      validate:
+        message: "All container types must run non-root with RuntimeDefault seccomp, drop all capabilities, prohibit privilege escalation, use a read-only root filesystem, and regular/init containers must set bounded CPU/memory requests and limits."
         foreach:
           - list: "request.object.spec.containers"
             pattern:
@@ -31,6 +39,7 @@ spec:
                 runAsNonRoot: true
                 seccompProfile:
                   type: RuntimeDefault
+                =(privileged): false
                 allowPrivilegeEscalation: false
                 readOnlyRootFilesystem: true
                 capabilities:
@@ -42,6 +51,7 @@ spec:
                 runAsNonRoot: true
                 seccompProfile:
                   type: RuntimeDefault
+                =(privileged): false
                 allowPrivilegeEscalation: false
                 readOnlyRootFilesystem: true
                 capabilities:
@@ -53,6 +63,7 @@ spec:
                 runAsNonRoot: true
                 seccompProfile:
                   type: RuntimeDefault
+                =(privileged): false
                 allowPrivilegeEscalation: false
                 readOnlyRootFilesystem: true
                 capabilities:

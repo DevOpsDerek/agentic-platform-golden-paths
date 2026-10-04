@@ -59,17 +59,17 @@ it expires or the workload is remediated.
 
 ## Validation without a cluster
 
-Run `make validate` to lint and render the chart and verify its secure defaults.
-It needs Helm but no Azure credentials, cluster, or image pull. If the Kyverno
-CLI is installed, this also runs the offline policy tests:
+Run `make validate` to lint and render the chart, verify its secure defaults,
+and run the offline policy tests. It requires Helm and the Kyverno CLI but no
+Azure credentials, cluster, or image pull:
 
 ```sh
 kyverno test tests/kyverno
 ```
 
 The tests expect the compliant fixture to pass and fixtures exercising
-container-level overrides, init/ephemeral containers, added capabilities, and
-invalid resource bounds to fail. For a live admission demonstration, install the
-policy into a disposable test cluster and submit
+container-level overrides, init/ephemeral containers, privileged containers,
+added capabilities, and invalid resource bounds to fail. For a live admission
+demonstration, install the policy into a disposable test cluster and submit
 `tests/kyverno/noncompliant-pod.yaml`; Kyverno must reject the Pod. Do not use
 that fixture as a deployment manifest.

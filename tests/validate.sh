@@ -67,8 +67,21 @@ if helm template secure-service "$chart" \
   exit 1
 fi
 
-if command -v kyverno >/dev/null 2>&1; then
-  kyverno test "${root}/tests/kyverno"
-else
-  echo "Kyverno CLI not installed; run 'kyverno test ${root}/tests/kyverno' to execute offline policy assertions."
+cat > "$invalid_values" <<'EOF'
+platform:
+  serviceAccount:
+    create: false
+    name: ""
+EOF
+if helm template secure-service "$chart" \
+  --namespace golden-path-demo \
+  --values "$invalid_values" > /dev/null 2>&1; then
+  echo "The chart schema accepted a disabled ServiceAccount with an empty name." >&2
+  exit 1
 fi
+
+if ! command -v kyverno >/dev/null 2>&1; then
+  echo "Kyverno CLI is required to validate the admission policy; install it and rerun 'make validate'." >&2
+  exit 1
+fi
+kyverno test "${root}/tests/kyverno"
