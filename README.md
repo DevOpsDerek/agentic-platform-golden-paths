@@ -73,3 +73,51 @@ added capabilities, and invalid resource bounds to fail. For a live admission
 demonstration, install the policy into a disposable test cluster and submit
 `tests/kyverno/noncompliant-pod.yaml`; Kyverno must reject the Pod. Do not use
 that fixture as a deployment manifest.
+
+## Central automation adoption
+
+`.github/workflows/validate-automation.yml` calls the published
+[`DevOpsDerek/workflows` automation validator](https://github.com/DevOpsDerek/workflows/blob/57da3f99768c3403cb688b1729d3dfc146c7cd4b/docs/catalog.md)
+at immutable commit `57da3f99768c3403cb688b1729d3dfc146c7cd4b`. It runs on pull
+requests, pushes to `main`, or manual dispatch with only `contents: read` and
+no inherited secrets. The central implementation lints Actions workflows and
+uses gh-aw `v0.89.21` to validate source/compiled-lock consistency when gh-aw
+sources exist. This repository currently has no runnable gh-aw sources or
+locks, so the central check explicitly skips compilation; it is not a Helm
+or admission-policy check.
+
+The existing `make validate` remains the offline golden-path check. There were
+no checked-in CI workflows before adoption (only GitHub-managed Copilot
+workflows). The catalog's checked-script interface supports Go, Python, Node,
+.NET, and Terraform, not this Bash/Helm/Kyverno toolchain; wrapping the existing
+script in another language would not provide a matching central implementation.
+A future central offline Helm/Kyverno interface should run the existing lint,
+render, secure-default and override assertions, schema rejection checks, and
+all 24 expected Kyverno rule results without cluster or cloud credentials.
+
+Baseline validation is not green: Helm `4.3.0` passes the current lint/render
+assertions, but Kyverno `1.19.1` rejects the test result field `resource`.
+Kyverno `1.13.6` accepts the deprecated test schema but loads zero policies and
+reports all 24 results as missing. Neither version is an approved working pin
+for this repository. Resolve the fixture/policy compatibility and verify all
+expected results before adopting a central policy-test toolchain; do not
+suppress these failures or substitute workflow linting for policy validation.
+
+An appropriate future gh-aw use case is a manually requested, repository-only,
+read-only assessment of rendered manifests against the chart schema, documented
+security defaults, and Kyverno rules. It should emit a bounded diagnostic report
+through safe outputs for human review, not change the manifests or execute
+deployment commands. The published catalog has no matching artifact-assessment
+component: its test/documentation components propose draft PRs, and its CI
+diagnosis component requires evidence from a completed triggering run. No
+agentic workflow is enabled by this adoption. Any future consumer must use a
+verified SHA-pinned central component, `inlined-imports: true`, and reviewed
+source plus generated lock files, with read-only agent permissions and bounded
+safe outputs.
+
+Workflow and CODEOWNERS changes request platform-owner review. Require human
+CODEOWNERS approval through branch protection before merging generated-artifact
+changes; CODEOWNERS alone does not enforce approval. This is particularly
+important because the Argo CD example watches `main` with automated sync,
+pruning, and self-healing. Automation must never provision infrastructure,
+apply manifests, publish, deploy, release, or autonomously merge.
