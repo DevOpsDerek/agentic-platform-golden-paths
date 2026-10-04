@@ -1,0 +1,17 @@
+name: Lint Helm chart defaults
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    uses: DevOpsDerek/workflows/.github/workflows/lint-helm.yml@30f86d7d8536364b0a31de4bc66214b39e8785bb
+    with:
+      helm-version: 3.17.3
+      chart-path: charts/secure-service
