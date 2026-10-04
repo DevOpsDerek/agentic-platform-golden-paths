@@ -96,12 +96,16 @@ def _scope_allowed(changed_files: list[Any]) -> bool:
     )
 
 
+def load_changed_files(path: Path) -> list[str]:
+    return path.read_text(encoding="utf-8").splitlines()
+
+
 def _override_recorded(value: Any) -> bool:
     if value is None:
         return True
     return isinstance(value, dict) and all(
         _non_empty_string(value.get(field))
-        for field in ("decision", "reviewer", "rationale")
+        for field in ("decision", "reviewer", "rationale", "follow_up_or_expiry")
     )
 
 
@@ -167,7 +171,11 @@ def load_cases(path: Path) -> tuple[str, list[dict[str, Any]]]:
     return dataset["evaluation_set"], cases
 
 
-def render_summary(evaluation_set: str, results: list[dict[str, Any]]) -> str:
+def render_summary(
+    evaluation_set: str,
+    results: list[dict[str, Any]],
+    proposal_scope: tuple[bool, int] | None,
+) -> str:
     passed = sum(result["status"] == result["expected_status"] for result in results)
     blocked = sum(result["status"] == "blocked" for result in results)
     lines = [
@@ -177,10 +185,20 @@ def render_summary(evaluation_set: str, results: list[dict[str, Any]]) -> str:
         f"- Cases matching expected status: **{passed}/{len(results)}**",
         f"- Cases blocked by guardrails: **{blocked}/{len(results)}**",
         "- Merge authorization: **not granted by this evaluation**",
-        "",
-        "| Case | Observed status | Expected status | Guardrail failures |",
-        "|---|---|---|---|",
     ]
+    if proposal_scope is not None:
+        scope_passed, changed_file_count = proposal_scope
+        lines.append(
+            f"- PR changed-file scope: **{'passed' if scope_passed else 'blocked'}** "
+            f"({changed_file_count} file(s))"
+        )
+    lines.extend(
+        [
+            "",
+            "| Case | Observed status | Expected status | Guardrail failures |",
+            "|---|---|---|---|",
+        ]
+    )
     for result in results:
         failed = ", ".join(result["failed_checks"]) or "none"
         lines.append(
@@ -199,6 +217,11 @@ def main() -> int:
         type=Path,
         help="append a Markdown run summary to this file (for GitHub Actions)",
     )
+    parser.add_argument(
+        "--changed-files-file",
+        type=Path,
+        help="check newline-separated paths from the proposed PR diff",
+    )
     args = parser.parse_args()
 
     try:
@@ -208,11 +231,15 @@ def main() -> int:
             result = evaluate_case(case)
             result["expected_status"] = case["expected_status"]
             results.append(result)
+        proposal_scope = None
+        if args.changed_files_file:
+            changed_files = load_changed_files(args.changed_files_file)
+            proposal_scope = (_scope_allowed(changed_files), len(changed_files))
     except (OSError, json.JSONDecodeError, ValueError) as error:
         print(f"Evaluation set error: {error}", file=sys.stderr)
         return 2
 
-    summary = render_summary(evaluation_set, results)
+    summary = render_summary(evaluation_set, results, proposal_scope)
     print(summary, end="")
     if args.summary:
         with args.summary.open("a", encoding="utf-8") as summary_file:
@@ -223,7 +250,7 @@ def main() -> int:
         for result in results
         if result["status"] != result["expected_status"]
     ]
-    if mismatches:
+    if mismatches or (proposal_scope is not None and not proposal_scope[0]):
         print(
             "Evaluation status mismatch: "
             + ", ".join(result["id"] for result in mismatches),

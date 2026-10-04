@@ -130,8 +130,12 @@ python3 tests/agent_feedback/evaluate.py
 
 `.github/workflows/evaluate-agent-pr.yml` runs that suite on pull requests and
 pushes to `main` with `contents: read`, no secrets, and no Azure deployment
-steps. Its job summary is evidence for that workflow run; the synthetic cases
-do not evaluate a live Copilot model or prove repository protection settings.
+steps. On PRs it runs the evaluator and case set from the base revision, using
+the PR checkout only for changed-file paths; it does not execute PR code. Its
+job summary is evidence for that workflow run; the synthetic cases do not
+evaluate a live Copilot model or prove repository protection settings. The
+initial PR adding the harness fails closed because its base branch does not yet
+contain the trusted evaluator; see `docs/agent-pr-feedback.md`.
 The evaluation reports readiness for human review, never authorizes a merge.
 Repository owners must keep merges subject to the existing repository rules and
 human approvals, and separately approve any Azure deployment. This change does

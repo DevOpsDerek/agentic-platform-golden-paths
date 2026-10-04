@@ -5,19 +5,24 @@
 The loop demonstrates review of bounded, synthetic golden-path or policy
 proposals. An agent may propose a change in a pull request; it must not apply
 manifests, provision infrastructure, deploy, or merge. The evaluation workflow
-has only `contents: read`, uses no secrets, and runs on `pull_request` (not
-`pull_request_target`). No Azure deployment credential or deployment job is
-configured here.
+has only `contents: read`, uses no secrets, and runs on `pull_request` (never
+`pull_request_target`). It checks out the base revision into a separate trusted
+directory and runs evaluator code, tests, and case data from that revision.
+The PR checkout is used only to obtain a changed-path list; its code is never
+executed by the evaluation job. No Azure deployment credential or deployment
+job is configured here.
 
 The evaluation set is `tests/agent_feedback/cases.json`, version
-`BG-012-synthetic-v1`. The Python evaluator and its unit tests are deterministic
+`BG-012-synthetic-v2`. The Python evaluator and its unit tests are deterministic
 and use only the standard library. They check bounded file scope, no production
 mutation, no Azure deployment access, successful deterministic validation,
 identified evaluation-set and CI evidence, human override recording, and
 diagnosis/rollback evidence for a simulated failure. The cases and evidence
 references are synthetic: passing them demonstrates evaluator behavior, not
 the performance or safety of a live coding agent. The fixtures are not
-measurements of an actual PR diff or runtime permissions.
+measurements of changed-file contents or runtime permissions. The trusted
+workflow separately checks the actual PR's changed path names against the
+bounded path allowlist.
 
 Run the evaluation locally:
 
@@ -50,13 +55,15 @@ or review summary with:
 Human override: <request-changes | exception-requested | accepted-with-rationale>
 Reviewer: <human reviewer>
 Rationale and scope: <why the automated result was overridden>
-Follow-up or expiry: <owner and date, or N/A>
+Follow-up or expiry: <specific owner and next action/date or exception expiry>
 ```
 
 An override is an audit record, not a bypass: it cannot turn a failed
 deterministic check into a pass, substitute for required review, or authorize a
 merge or deployment. Exceptions to security policy still require the
-time-bounded platform/security-owner approval described in the README.
+time-bounded platform/security-owner approval described in the README. An
+override without a non-empty follow-up or expiry is incomplete and fails the
+evaluation.
 
 Do not report productivity improvements from this synthetic suite. Its output
 only describes the tested cases and their guardrail results.
@@ -83,3 +90,9 @@ failure evidence is recorded. It does not execute a real rollback. This
 repository does not expose production deployment, branch-protection
 configuration, or live Copilot-agent capabilities to this evaluation, so those
 capabilities cannot be independently verified here.
+
+The first PR that introduces this harness has no trusted evaluator on its base
+revision. The workflow therefore fails closed instead of executing the PR's
+evaluator or cases. This bootstrap PR's local synthetic run is not trusted CI
+evidence; after the harness is present on the base branch, subsequent PR runs
+execute the protected-base version and evaluate the proposed changed paths.
